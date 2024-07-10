@@ -7,9 +7,7 @@ class FormAjax {
         this.settings = new FormSettings();
         this.popupSize = 'col-md-12';
         this.laravelPath = '/vendor/formajax/';
-        if (this.loadDependencies()) {
-            this.init();
-        }
+        this.loadDependencies().then(() => this.init());
     }
     async loadDependencies() {
         const missingDependencies = this.dependencies.filter(dep => {
