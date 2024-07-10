@@ -1,6 +1,6 @@
 {
     "name": "dcyilmaz/formajax",
-    "description": "Formajax JavaScript class for Laravel.",
+    "description": "FormAjax converts your forms into forms that submit with ajax without refreshing the page.",
     "type": "library",
     "license": "MIT",
     "autoload": {
