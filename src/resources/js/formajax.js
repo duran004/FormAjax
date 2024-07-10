@@ -26,11 +26,11 @@ class FormAjax {
             for (const dep of missingDependencies) {
                 this.log(`${dep} not found`, 'error');
                 if (dep === 'jquery') {
-                    await this.loadScript(`${this.laravelPath}jquery.min.js`);
+                    await this.loadScript(`${this.laravelPath}jquery.js`);
                 }
                 if (dep === 'jquery-confirm') {
-                    await this.loadScript(`${this.laravelPath}jquery-confirm.min.js`);
-                    await this.loadScript(`${this.laravelPath}jquery-confirm.min.css`);
+                    await this.loadScript(`${this.laravelPath}jquery-confirm.js`);
+                    await this.loadScript(`${this.laravelPath}jquery-confirm.css`);
                 }
             }
             return this.loadDependencies();
