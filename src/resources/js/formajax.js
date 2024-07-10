@@ -6,7 +6,7 @@ class FormAjax {
         this.formElement = formElement;
         this.settings = new FormSettings();
         this.popupSize = 'col-md-12';
-        this.laravelPath = '/vendor/formajax/resources/js/';
+        this.laravelPath = '/vendor/formajax/';
         if (this.loadDependencies()) {
             this.init();
         }
