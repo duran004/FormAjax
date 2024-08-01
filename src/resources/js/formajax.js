@@ -7,6 +7,7 @@ class FormAjax {
         this.settings = new FormSettings();
         this.popupSize = 'col-md-12';
         this.laravelPath = '/vendor/formajax/';
+        this.csrfToken = null;
         this.loadDependencies().then(() => this.init());
     }
     async loadDependencies() {
@@ -127,7 +128,9 @@ class FormAjax {
         const formMethod = $(form).attr('method').toLowerCase();
         const allElements = $(form).find(this.elementsSelector);
         const checkboxNames = new Set();
-
+        var csrfInput = $(form).find('input[name="_token"]');
+        this.csrfToken = csrfInput.length ? csrfInput.val() : null;
+        this.log(`form_url: ${formUrl} form_method: ${formMethod} csrf_token: ${this.csrfToken}`);
         allElements.each((_, element) => {
             const $element = $(element);
             if ($element.is(':checkbox')) {
@@ -151,14 +154,26 @@ class FormAjax {
             data: formData,
             processData: false, // Do not process data
             contentType: false, // Do not set content type
+            headers: {
+                'X-CSRF-TOKEN': this.csrfToken,
+            },
             success: (response, status, xhr) => {
                 console.log(response);
-                if (xhr.status === 200) {
+                //if status start with 2
+                if (xhr.status.toString().startsWith('2')) {
                     if (response.status) {
                         this.handleSuccess(response);
                     } else {
-                        this.handleError(response, 200);
+                        this.handleError(response);
                     }
+                } else if (xhr.status.toString().startsWith('4')) {
+                    this.handleError(response, 400);
+                } else if (xhr.status.toString().startsWith('5')) {
+                    this.handleError(response, 500);
+                } else if (xhr.status.toString().startsWith('3')) {
+                    this.handleError(response, 300);
+                } else if (xhr.status.toString().startsWith('1')) {
+                    this.handleError(response, 100);
                 } else {
                     this.handleError(xhr);
                 }
@@ -230,7 +245,7 @@ class FormAjax {
         };
 
         const { background, color } = logTypes[type] || logTypes.info;
-        console.log(`%c${message}`, `background: ${background}; color: ${color}; padding: 5px; border-radius: 5px;`);
+        console.log(`%c FormAjax: ${message}`, `background: ${background}; color: ${color}; padding: 2px; border-radius: 5px;`);
     }
 }
 
