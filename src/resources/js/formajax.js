@@ -130,7 +130,16 @@ class FormAjax {
         const checkboxNames = new Set();
         var csrfInput = $(form).find('input[name="_token"]');
         this.csrfToken = csrfInput.length ? csrfInput.val() : null;
-        this.log(`form_url: ${formUrl} form_method: ${formMethod} csrf_token: ${this.csrfToken}`);
+        const contentTypes = {
+            'post': 'application/json',
+            'put': 'application/x-www-form-urlencoded',
+            'delete': 'application/json',
+            'get': 'application/x-www-form-urlencoded'
+        };
+        this.log(`form_url: ${formUrl} 
+            form_method: ${formMethod} 
+            content_type: ${contentTypes[formMethod]}
+            csrf_token: ${this.csrfToken}`);
         allElements.each((_, element) => {
             const $element = $(element);
             if ($element.is(':checkbox')) {
@@ -153,9 +162,11 @@ class FormAjax {
             method: formMethod,
             data: formData,
             processData: false, // Do not process data
-            contentType: false, // Do not set content type
+            // contentType: false, // Do not set content type
+
             headers: {
                 'X-CSRF-TOKEN': this.csrfToken,
+                'Content-Type': contentTypes[formMethod]
             },
             success: (response, status, xhr) => {
                 console.log(response);
