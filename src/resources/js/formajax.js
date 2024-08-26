@@ -123,28 +123,31 @@ class FormAjax {
         }, '').slice(0, -1); // Remove the last '&' character
     }
     submit(form) {
-        const formData = new FormData();
+        var formData = new FormData();
         const formUrl = $(form).attr('action');
         const formMethod = $(form).attr('method').toLowerCase();
         const allElements = $(form).find(this.elementsSelector);
         const checkboxNames = new Set();
+        var _method = $(form).find('input[name="_method"]').val();
         var csrfInput = $(form).find('input[name="_token"]');
         this.csrfToken = csrfInput.length ? csrfInput.val() : null;
-        const contentTypes = {
-            'post': 'application/json',
-            'put': 'application/x-www-form-urlencoded',
-            'delete': 'application/json',
-            'get': 'application/x-www-form-urlencoded'
-        };
+        const submitButton = $(form).find('button[type="submit"]');
+        const loader_icon = '<i class="fa fa-spinner fa-spin"></i>';
         this.log(`form_url: ${formUrl} 
             form_method: ${formMethod} 
-            content_type: ${contentTypes[formMethod]}
             csrf_token: ${this.csrfToken}`);
+
         allElements.each((_, element) => {
             const $element = $(element);
             if ($element.is(':checkbox')) {
                 const name = $element.attr('name');
                 checkboxNames.add(name);
+            } else if ($element.is(':file')) {
+                // Handle file inputs
+                const files = $element[0].files;
+                for (let i = 0; i < files.length; i++) {
+                    formData.append($element.attr('name'), files[i]);
+                }
             } else {
                 formData.append($element.attr('name'), $element.val());
             }
@@ -156,19 +159,31 @@ class FormAjax {
             });
         });
 
-        this.log(`form_data: ${formData}`, 'warning');
+        // Log the contents of formData
+        console.log('form_data:');
+        for (let pair of formData.entries()) {
+            console.log(`${pair[0]}: ${pair[1]}`);
+        }
+        // submitbuttonu disable yap tüm form içerisinde gri yap loading bar koy
+        submitButton.prop('disabled', true);
+        var submitButtonText = submitButton.html();
+        submitButton.html(loader_icon);
+
+
         $.ajax({
             url: formUrl,
             method: formMethod,
             data: formData,
             processData: false, // Do not process data
-            // contentType: false, // Do not set content type
+            contentType: false, // Do not set content type
 
             headers: {
                 'X-CSRF-TOKEN': this.csrfToken,
-                'Content-Type': contentTypes[formMethod]
+                'X-HTTP-Method-Override': _method // Add the X-HTTP-Method-Override header
             },
             success: (response, status, xhr) => {
+                submitButton.prop('disabled', false);
+                submitButton.html(submitButtonText);
                 console.log(response);
                 //if status start with 2
                 if (xhr.status.toString().startsWith('2')) {
@@ -189,10 +204,15 @@ class FormAjax {
                     this.handleError(xhr);
                 }
             },
-            error: (xhr) => this.handleError(xhr),
+            error: (xhr) => {
+                submitButton.prop('disabled', false);
+                submitButton.html(submitButtonText);
+
+                console.log(xhr);
+                this.handleError(xhr);
+            }
         });
     }
-
     handleSuccess(response) {
         if (this.settings.openPopup) {
             $.alert({
